@@ -2,11 +2,11 @@ var app = require('express')();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http, {
     cors:
-        // true
-        {
-            origin: "http://54.90.155.243",
+        true
+        // {
+            // origin: "http://54.90.155.243",
             // methods: ["GET", "POST"]
-        }
+        // }
 });
 
 app.get('/', function (req, res) {
