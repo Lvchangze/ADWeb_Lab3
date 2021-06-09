@@ -20,6 +20,7 @@
 <script src="js/socket.io.js"></script>
 <script src="js/GLTFLoader.js"></script>
 <script>
+    // const {io} = require("./js/socket.io");
     const scene = new THREE.Scene();
 
     const SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
@@ -88,12 +89,16 @@
             const loader = new THREE.GLTFLoader();
             loader.load("./assets/models/duck.glb", (mesh) => {
                 //如果这个判断注释掉会怎么样，为什么
+
                 if (!playerMap.has(data.socketid)) {
                     mesh.scene.scale.set(10, 10, 10);
                     scene.add(mesh.scene);
                     playerMap.set(data.socketid, mesh.scene);
                     let model = playerMap.get(data.socketid);
+                    model.position.set(data.position.x, data.position.y, data.position.z);
+                    model.rotation.set(data.rotation._x, data.rotation._y + Math.PI / 2, data.rotation._z);
                 }
+
             });
         }
     });
@@ -105,13 +110,31 @@
     });
 
     function render() {
+        let x = fpc.yawObject.position.x;
+        let y = fpc.yawObject.position.y;
+        let z = fpc.yawObject.position.z;
         fpc.update(clock.getDelta());
+        //碰撞检测
+        if (collision())
+            fpc.yawObject.position.set(x,y,z);
+        // 客户端不断上传自己的实时信息（位置信息与旋转信息）
         socket.emit('player', {position: fpc.yawObject.position, rotation: fpc.yawObject.rotation});
         requestAnimationFrame(render);
         renderer.render(scene, camera);
     }
-
     render();
+
+    function collision(){
+        for (let models of playerMap.values()){
+            if (distance(models.position,fpc.yawObject.position) < 120)
+                return true;
+        }
+        return false;
+    }
+
+    function distance(pos1,pos2){
+        return Math.pow(pos1.x - pos2.x,2) + Math.pow(pos1.y - pos2.y,2) + Math.pow(pos1.z - pos2.z,2);
+    }
 </script>
 </body>
 </html>
